@@ -9,6 +9,7 @@ class NeuralNet:
         self.X_train_set, self.Y_train_set_n, self.X_valid_set, self.Y_valid_set_n, self.X_test_set, self.Y_test_set_n,\
             self.Y_train_set_v, self.Y_valid_set_v, self.Y_test_set_v = inputs.get_inputs('mnist.pkl.gz')
 
+        self.n_training_examples = self.X_train_set.shape[0]
         self.max_epochs = w
         self.n_layers = x
         self.n_perceptrons_per_layer = y
@@ -32,8 +33,8 @@ class NeuralNet:
         self.layer_activations[0] = X
 
         for i in range(1, self.n_layers):
-            self.layer_activations[i] = tf.add(tf.matmul(self.layer_activations[i - 1], self.weights[i]['weights']),
-                                               self.weights[i]['biases'])
+            self.layer_activations[i] = tf.nn.relu(tf.add(tf.matmul(self.layer_activations[i - 1], self.weights[i]['weights']),
+                                               self.weights[i]['biases']))
 
         return self.layer_activations[self.n_layers - 1]
 
@@ -49,5 +50,18 @@ class NeuralNet:
 
     def train(self):
 
-        for in range(self.max_epochs):
-            
+        n_updates_per_epoch = int(self.n_training_examples / self.batch_size)
+
+        epoch_loss = 0
+
+        for i in range(self.max_epochs):
+            for j in range(n_updates_per_epoch):
+                batch_loss = self.find_loss_per_batch(self.X_train_set[j * self.batch_size: j * self.batch_size + self.batch_size],
+                                                      self.Y_train_set_v[j * self.batch_size: j * self.batch_size + self.batch_size])
+                epoch_loss += batch_loss
+
+                tf.train.AdamOptimizer(learning_rate=.001, batch_loss)
+
+            print('loss in this epoch is ' + str(epoch_loss / self.n_training_examples))
+
+
