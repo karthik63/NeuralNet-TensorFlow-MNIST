@@ -35,16 +35,19 @@ class NeuralNet:
 
         self.layer_activations[0] = X
 
-        for i in range(1, self.n_layers):
+        for i in range(1, self.n_layers - 1):
             self.layer_activations[i] = tf.nn.relu(tf.add(tf.matmul(self.layer_activations[i - 1], self.weights[i]['weights']),
-                                               self.weights[i]['biases']))
+                                                   self.weights[i]['biases']))
+
+        self.layer_activations[self.n_layers - 1] = tf.add(tf.matmul(self.layer_activations[self.n_layers - 2], self.weights[self.n_layers - 1]['weights']),
+                                                           self.weights[self.n_layers - 1]['biases'])
 
         return self.layer_activations[self.n_layers - 1]
 
     def find_loss_per_batch(self, X, Y):
 
         prediction = self.predict(X)
-        batch_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=prediction, labels=Y))
+        batch_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=Y))
 
         return batch_loss
 
@@ -61,6 +64,8 @@ class NeuralNet:
 
         with tf.Session() as sess:
 
+            sess.run(tf.global_variables_initializer())
+
             for i in range(self.max_epochs):
                 epoch_loss = 0
                 for j in range(n_updates_per_epoch):
@@ -68,21 +73,15 @@ class NeuralNet:
                     current_batch_X = self.X_train_set[j * self.batch_size : j * self.batch_size + self.batch_size]
                     current_batch_Y = self.Y_train_set_v[j * self.batch_size : j * self.batch_size + self.batch_size]
 
-                    sess.run(tf.global_variables_initializer())
                     _, temp = sess.run([optimiser, batch_loss], feed_dict={X: current_batch_X, Y: current_batch_Y})
                     epoch_loss += temp
                 print('epoch loss is ' + str(epoch_loss))
 
-    def find_accuracy(self):
-        with tf.Session() as sess:
-            a = sess.eval(self.predict(self.X_test_set))
-        b = self.Y_test_set_v
+            predi = tf.argmax(self.predict(self.X_test_set), 1)
+            correct = tf.argmax(self.Y_test_set_v, 1)
+            accuracy = tf.reduce_mean(tf.cast(tf.equal(predi, correct), 'float'))
+            print('accuracy is ' + str(sess.run(accuracy)))
 
-        c = a == b
-
-        print((sum(c)/b.shape[0]) * 100)
-
-nn1 = NeuralNet(3, [784, 10, 10], 100, 10)
+nn1 = NeuralNet(3, [784, 500, 500, 500, 500, 10], 100, 100)
 
 nn1.train()
-nn1.find_accuracy()
