@@ -73,6 +73,7 @@ class NeuralNet:
                     current_batch_X = self.X_train_set[j * self.batch_size : j * self.batch_size + self.batch_size]
                     current_batch_Y = self.Y_train_set_v[j * self.batch_size : j * self.batch_size + self.batch_size]
 
+
                     _, temp = sess.run([optimiser, batch_loss], feed_dict={X: current_batch_X, Y: current_batch_Y})
                     epoch_loss += temp
                 print('epoch loss is ' + str(epoch_loss))
@@ -82,6 +83,6 @@ class NeuralNet:
             accuracy = tf.reduce_mean(tf.cast(tf.equal(predi, correct), 'float'))
             print('accuracy is ' + str(sess.run(accuracy)))
 
-nn1 = NeuralNet(3, [784, 500, 500, 500, 500, 10], 100, 100)
+nn1 = NeuralNet(3, [784, 500, 500, 500, 500, 10], 100, 1000)
 
 nn1.train()
